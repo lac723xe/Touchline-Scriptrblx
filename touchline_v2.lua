@@ -203,11 +203,11 @@ local function doPrediction()
     if not pos then return end
     local vel = getBallVel(bestBall)
     if not vel or vel.Magnitude < 0.5 then return end
-    local spd = math.min(vel.Magnitude, 100)
+    local spd = math.min(vel.Magnitude, 150)
 
     local pts = {}
-    for i = 0, 20 do
-        local t = i * 0.05
+    for i = 0, 40 do
+        local t = i * 0.06
         local cv = spd > 0.1 and vel.Unit * spd or Vector3.new()
         pts[i+1] = pos + cv * t + 0.5 * GRAVITY * t * t
     end
