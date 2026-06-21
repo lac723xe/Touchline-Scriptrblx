@@ -72,15 +72,23 @@ local function scanBalls()
     frameCount = frameCount + 1
     if frameCount % 5 ~= 0 and #cachedBalls > 0 then return end
     local folder = ws:FindFirstChild("Footballs")
-    if not folder then cachedBalls = {}; return end
+    if not folder then cachedBalls = {}; lastBestBall = nil; lastBestBallId = nil; return end
     local new = {}
     for _, c in ipairs(folder:GetChildren()) do
         if c:IsA("BasePart") then new[#new+1] = c end
     end
     cachedBalls = new
+    if lastBestBallId then
+        local stillHere = false
+        for _, ball in ipairs(new) do
+            if tostring(ball) == lastBestBallId then stillHere = true; break end
+        end
+        if not stillHere then lastBestBall = nil; lastBestBallId = nil; ballOffFrames = 0 end
+    end
 end
 
 local function getBallVel(ball)
+    if not (ball and ball.Parent) then return Vector3.new() end
     local v = ball.Velocity
     if v and v.Magnitude > 0.1 then return v end
     v = ball.AssemblyLinearVelocity
@@ -147,6 +155,7 @@ end
 
 --== Prediction ==--
 local lastBestBall = nil
+local lastBestBallId = nil
 local ballOffFrames = 0
 local function doPrediction()
     if #cachedBalls == 0 then return end
@@ -155,7 +164,7 @@ local function doPrediction()
     local myPos = getCharPos(lp and lp.Character)
 
     local bestBall
-    if lastBestBall then
+    if lastBestBall and lastBestBall.Parent then
         local pos = lastBestBall.Position
         if pos then
             local _, bon = WorldToScreen(pos)
@@ -172,7 +181,7 @@ local function doPrediction()
         end
     end
     if not bestBall then
-        ballOffFrames = 0
+        ballOffFrames = 0; lastBestBall = nil; lastBestBallId = nil
         local bestDist
         for _, ball in ipairs(cachedBalls) do
             local pos = ball.Position
@@ -187,7 +196,7 @@ local function doPrediction()
                 end
             end
         end
-        if bestBall then lastBestBall = bestBall else return end
+        if bestBall then lastBestBall = bestBall; lastBestBallId = tostring(bestBall) else return end
     end
 
     local pos = bestBall.Position
